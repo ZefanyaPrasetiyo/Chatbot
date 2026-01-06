@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
   const data = await res.json();
 
   return NextResponse.json({
-    reply: data.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada jawaban",
+    reply:
+      data.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada jawaban",
   });
 }
