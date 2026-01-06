@@ -5,7 +5,12 @@ import ModalMasuk from "./modalLogin";
 import RegisterModal from "./modalRegister";
 import { Button } from "./ui/button";
 
-export default function AuthModal() {
+type ModalMasukProps = {
+  onSwitchToRegister: () => void;
+  close: () => void;
+};
+
+export default function AuthModal({ onSwitchToRegister, close }: ModalMasukProps) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   

@@ -13,9 +13,18 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardBody, CardFooter } from "@heroui/card";
 import GradientText from "@/components/GradientText";
 
+type Chat = {
+  pertanyaan: string;
+  jawaban: string;
+  isloading: boolean;
+};
+
+
 export default function Home() {
+
+
   const [prompt, setPrompt] = useState("");
-  const [chats, setChats] = useState([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const session = useSession();
   console.log("=========================", session);
