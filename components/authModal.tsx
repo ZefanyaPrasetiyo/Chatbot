@@ -13,7 +13,7 @@ export default function AuthModal() {
 
   return (
     <>
-      <Button className="bg-gray-800 font-bold" onClick={() => setOpen(true)}>
+      <Button className="transition-all duration-200 cursor-pointer rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white transition duration-300 font-bold text-md" onClick={() => setOpen(true)}>
         Login
       </Button>
 

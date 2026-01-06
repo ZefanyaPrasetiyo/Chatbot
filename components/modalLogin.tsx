@@ -70,7 +70,7 @@ export default function ModalMasuk({ onSwitchToRegister }: ModalMasukProps) {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition ${
+            className={`w-full py-2 rounded-lg transition-all duration-200 cursor-pointer rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white transition duration-300 transition ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
