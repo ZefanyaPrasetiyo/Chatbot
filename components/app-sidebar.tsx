@@ -16,9 +16,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
-import { Ellipsis, LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
-import ModalSettingRiwayat from "./modal-setting-riwayat";
+import { Ellipsis, LogOut, Trash2 } from "lucide-react";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { ArrowDownToLine } from 'lucide-react';
 
 type Riwayat = {
   id: string;
@@ -27,151 +29,189 @@ type Riwayat = {
 
 export function AppSidebar() {
   const [riwayat, setRiwayat] = useState<Riwayat[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
 
-  const logOut = async () => {
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "Apakah kamu yakin mau keluar?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      reverseButtons: true,
-      theme: "dark",
-    });
 
-    if (!result.isConfirmed) return;
+  const downloadApk = () => {
+  window.location.href =
+    "https://github.com/ZefanyaPrasetiyo/apk-download/releases/tag/v1.0-test/Chess-test.apk";
+};
 
-    await supabase.auth.signOut();
+  const obrolanBaru = () => {
     window.location.reload();
   };
 
-  const fetchRiwayat = async () => {
-    const { data } = await supabase
-      .from("percakapan")
-      .select("id, judul")
-      .order("created_at", { ascending: false });
+  const hapusRiwayat = async (id: string) => {
+    const res = await Swal.fire({
+  title: "Hapus riwayat?",
+  text: "Chat ini akan dihapus permanen",
+  icon: "warning",
+  iconColor: "#a855f7",
+  showCancelButton: true,
+  background: "#111827",
+  color: "#ffffff",
+  confirmButtonColor: "#a855f7", 
+  cancelButtonColor: "#ef4444", 
+  confirmButtonText: "Hapus",
+  cancelButtonText: "Batal",
+});
 
-    setRiwayat(data || []);
+
+    if (!res.isConfirmed) return;
+
+    const { error } = await supabase.from("percakapan").delete().eq("id", id);
+
+    if (!error) {
+      setRiwayat((prev) => prev.filter((r) => r.id !== id));
+      setOpenId(null);
+    }
   };
 
   useEffect(() => {
-    fetchRiwayat();
-  }, []);
+  supabase.auth.getSession().then(({ data }) => {
+    setSession(data.session);
+  });
+
+  const {
+    data: listener,
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setSession(session);
+  });
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
+
 
   useEffect(() => {
-    const channel = supabase
-      .channel("sidebar-percakapan")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "percakapan" },
-        (payload: any) => {
-          setRiwayat((prev) =>
-            prev.some((item) => item.id === payload.new.id)
-              ? prev
-              : [payload.new, ...prev]
-          );
-        }
-      )
-      .subscribe();
+  if (!session) {
+    setRiwayat([]);
+    return;
+  }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  supabase
+    .from("percakapan")
+    .select("id, judul")
+    .order("created_at", { ascending: false })
+    .then(({ data }) => setRiwayat(data || []));
+}, [session]);
+
+
+  const logOut = async () => {
+    const res = await Swal.fire({
+  title: "Yakin ingin keluar?",
+  text: "Confirm untuk logout dari akun Anda.",
+  icon: "warning",
+  iconColor: "#a855f7",
+  showCancelButton: true,
+  background: "#111827",
+  color: "#ffffff",
+  confirmButtonColor: "#a855f7", 
+  cancelButtonColor: "#ef4444", 
+  confirmButtonText: "Ya",
+  cancelButtonText: "Batal",
+});
+
+    if (res.isConfirmed) {
+      await supabase.auth.signOut();
+      window.location.reload();
+    }
+  };
 
   return (
-    <>
-      <Sidebar>
-        <SidebarHeader className="lg:text-center text-white font-bold bg-black">
-          VYOLET
-        </SidebarHeader>
+    <Sidebar>
+      <SidebarHeader className="bg-black text-white font-bold text-center text-2xl">
+        <div className="flex flex-row items-center gap-2 px-1 justify-items-start">
+        <Image
+          src={"/image/logo-vyolet.png"}
+          alt="Vyolet Logo"
+          width={80}
+          height={80}
+          />
+          <h1 className="text-white text-3xl">VYOLET</h1>
+          </div>
+      </SidebarHeader>
+      <SidebarContent className="bg-black text-white">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-400">Menu</SidebarGroupLabel>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="hover:bg-purple-600/30 hover:text-white"
+            >
+              <button onClick={obrolanBaru}>Obrolan baru</button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarGroupLabel className="text-gray-400">
+            Riwayat Obrolan
+          </SidebarGroupLabel>
 
-        <SidebarContent className="bg-black text-white">
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-gray-400">
-              Menu
-            </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {riwayat.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <div className="relative flex items-center ">
+                    <SidebarMenuButton className="w-full pr-8 hover:bg-purple-600/30 hover:text-white">
+                      <span className="truncate">{item.judul}</span>
+                    </SidebarMenuButton>
 
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    className="hover:bg-gray-800/60 hover:text-white"
-                  >
-                    <Link href="/">Obrolan baru</Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                <SidebarGroupLabel className="text-gray-400">
-                  Riwayat Obrolan
-                </SidebarGroupLabel>
-
-                {riwayat.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <div className="relative flex items-center group/item">
-                      <SidebarMenuButton
-                        className="w-full pr-10 hover:bg-gray-800/60 hover:text-white"
-                        onClick={() =>
-                          Swal.fire(
-                            "Info",
-                            "Maaf fitur sedang dikembangkan",
-                            "info"
-                          )
-                        }
-                      >
-                        <span className="truncate">
-                          {item.judul || "Obrolan Baru"}
-                        </span>
-                      </SidebarMenuButton>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedId(item.id);
-                          setOpenModal(true);
-                        }}
-                        className="absolute right-3 opacity-0 group-hover/item:opacity-100 transition-opacity text-white hover:text-gray-300"
-                      >
-                        <Ellipsis size={14} />
-                      </button>
-                    </div>
-                  </SidebarMenuItem>
-                ))}
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    className="hover:bg-gray-800/60 hover:text-white"
-                  >
-                    <Button
-                      className="bg-transparent flex items-center justify-start"
-                      onClick={logOut}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenId(openId === item.id ? null : item.id);
+                      }}
+                      className="absolute right-2"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Keluar
-                    </Button>
-                  </SidebarMenuButton>
+                      <Ellipsis size={14} />
+                    </button>
+
+                    {openId === item.id && (
+                      <div className="absolute right-2 top-full mt-1 z-50 w-28 bg-gray-800 shadow rounded-xl">
+                        <button
+                          onClick={() => hapusRiwayat(item.id)}
+                          className="flex font-bold w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-gray-700 rounded-xl"
+                        >
+                          <Trash2 size={14} />
+                          Hapus
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter className="bg-black text-white">Vy</SidebarFooter>
-      </Sidebar>
-
-      <ModalSettingRiwayat
-        open={openModal}
-        id={selectedId}
-        onClose={() => setOpenModal(false)}
-        onSuccess={(id) =>
-          setRiwayat((prev) => prev.filter((item) => item.id !== id))
-        }
-      />
-    </>
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                >
+                <button onClick={downloadApk} className="transition-all duration-200 cursor-pointer rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white transition duration-300">
+                  <div className="flex flex-row items-center justify-center px-12 py-2 font-bold text-center">
+                    <ArrowDownToLine className="inline mr-2 h-4 w-4" />
+                  Unduh Aplikasi
+                  </div>
+                </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {session && (
+                <SidebarMenuItem>
+                <Button
+                  onClick={logOut}
+                  variant="ghost"
+                  className="w-full justify-start text-red-600 hover:bg-red-600/20 hover:text-red-600"
+                  >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Keluar
+                </Button>
+              </SidebarMenuItem>
+                )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="bg-black text-white text-center">
+        Vy
+      </SidebarFooter>
+    </Sidebar>
   );
 }

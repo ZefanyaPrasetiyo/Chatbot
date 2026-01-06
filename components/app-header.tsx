@@ -40,7 +40,7 @@ export default function AppHeader() {
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 border-b border-white/10 bg-black">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-white" />
-        <h1 className="font-semibold text-lg text-white">Vyolet</h1>
+
       </div>
       <div>
         {session ? (
