@@ -8,6 +8,11 @@ import { Lock } from "lucide-react";
 import { Eye } from "lucide-react";
 import { EyeClosed } from "lucide-react";
 
+interface ModalDaftarProps {
+  onSwitchToLogin: () => void;
+  close: () => void;
+}
+
 export default function RegisterModal({ onSwitchToLogin }: ModalDaftarProps) {
   const [email, setEmail] = useState("");
   const [nama, setNama] = useState("");

@@ -8,7 +8,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation";
 
 interface ModalMasukProps {
-  onSwitchToRegister?: () => void
+  onSwitchToRegister: () => void;
+  close: () => void;
 }
 
 export default function ModalMasuk({ onSwitchToRegister }: ModalMasukProps) {
